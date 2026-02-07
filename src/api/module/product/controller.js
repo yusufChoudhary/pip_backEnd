@@ -8,7 +8,15 @@ class ProductController {
     const skip = (page - 1) * limit;
     try {
       const servicesResponse = await productService.getProducts(skip, limit);
-      return ResponseHandler.success({ res, message: servicesResponse.message, servicesResponse: servicesResponse.data ,statusCode: servicesResponse.statusCode });
+      if (servicesResponse.data && Array.isArray(servicesResponse.data)) {
+        const host = `${req.protocol}://${req.get("host")}`;
+        servicesResponse.data = servicesResponse.data.map((p) => ({
+          ...p,
+          image: p.image && p.image.startsWith("/") ? `${host}${p.image}` : p.image,
+        }));
+      }
+
+      return ResponseHandler.success({ res, message: servicesResponse.message, servicesResponse: servicesResponse.data, statusCode: servicesResponse.statusCode });
     } catch (err) {
       ResponseHandler.catchError({ res, err })
     }
